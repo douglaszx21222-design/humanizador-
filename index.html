@@ -1,0 +1,495 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>TextoHumano — Humanizador de IA</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;500;600&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet" />
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --ink: #1a1a1a;
+      --ink2: #555;
+      --ink3: #999;
+      --surface: #f7f5f0;
+      --card: #ffffff;
+      --accent: #2d6a4f;
+      --accent-hover: #40916c;
+      --border: #e5e0d5;
+      --tag-bg: #e8f5ee;
+      --tag-c: #2d6a4f;
+      --shadow: 0 2px 16px rgba(0,0,0,0.06);
+    }
+
+    html { scroll-behavior: smooth; }
+
+    body {
+      font-family: 'DM Sans', sans-serif;
+      background: var(--surface);
+      color: var(--ink);
+      min-height: 100vh;
+    }
+
+    /* NAV */
+    nav {
+      background: var(--card);
+      border-bottom: 0.5px solid var(--border);
+      padding: 0 2rem;
+      height: 56px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      position: sticky;
+      top: 0;
+      z-index: 100;
+    }
+    .nav-logo {
+      font-family: 'Playfair Display', serif;
+      font-size: 20px;
+      font-weight: 500;
+      color: var(--ink);
+      text-decoration: none;
+    }
+    .nav-logo span { color: var(--accent); }
+    .nav-badges { display: flex; gap: 6px; }
+    .nav-badge {
+      font-size: 11px;
+      padding: 3px 9px;
+      border-radius: 20px;
+      background: var(--tag-bg);
+      color: var(--tag-c);
+      font-weight: 500;
+    }
+
+    /* HERO */
+    .hero {
+      text-align: center;
+      padding: 3rem 1.5rem 2rem;
+    }
+    .hero h1 {
+      font-family: 'Playfair Display', serif;
+      font-size: clamp(28px, 5vw, 46px);
+      font-weight: 500;
+      line-height: 1.2;
+      color: var(--ink);
+      margin-bottom: 12px;
+    }
+    .hero h1 em { color: var(--accent); font-style: normal; }
+    .hero p {
+      font-size: 15px;
+      color: var(--ink2);
+      max-width: 480px;
+      margin: 0 auto 20px;
+      line-height: 1.6;
+    }
+    .hero-tags { display: flex; gap: 8px; justify-content: center; flex-wrap: wrap; }
+    .hero-tag {
+      font-size: 12px;
+      padding: 4px 12px;
+      border-radius: 20px;
+      border: 0.5px solid var(--border);
+      color: var(--ink2);
+      background: var(--card);
+    }
+
+    /* MAIN */
+    .main {
+      max-width: 820px;
+      margin: 0 auto;
+      padding: 1.5rem;
+    }
+
+    /* CARD */
+    .card {
+      background: var(--card);
+      border: 0.5px solid var(--border);
+      border-radius: 16px;
+      padding: 1.5rem;
+      box-shadow: var(--shadow);
+      margin-bottom: 1rem;
+    }
+
+    .section-label {
+      font-size: 11px;
+      font-weight: 500;
+      color: var(--ink3);
+      text-transform: uppercase;
+      letter-spacing: 0.9px;
+      margin-bottom: 10px;
+    }
+
+    textarea {
+      width: 100%;
+      border: none;
+      outline: none;
+      resize: none;
+      font-family: 'DM Sans', sans-serif;
+      font-size: 15px;
+      line-height: 1.75;
+      color: var(--ink);
+      background: transparent;
+      min-height: 160px;
+    }
+    textarea::placeholder { color: #c8c2b8; }
+
+    .divider { height: 0.5px; background: var(--border); margin: 14px 0; }
+
+    /* OPTIONS */
+    .opts { display: flex; gap: 6px; flex-wrap: wrap; margin-bottom: 14px; }
+    .opt {
+      font-size: 12.5px;
+      padding: 6px 14px;
+      border-radius: 20px;
+      border: 0.5px solid var(--border);
+      background: transparent;
+      cursor: pointer;
+      color: var(--ink2);
+      font-family: 'DM Sans', sans-serif;
+      transition: all 0.15s;
+    }
+    .opt.active {
+      background: var(--tag-bg);
+      color: var(--accent);
+      border-color: var(--accent-hover);
+      font-weight: 500;
+    }
+    .opt:hover:not(.active) { background: #f0ede6; }
+
+    /* BOTTOM BAR */
+    .bottom-bar {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 10px;
+      flex-wrap: wrap;
+    }
+    .char-count { font-size: 12px; color: var(--ink3); }
+
+    .run-btn {
+      background: var(--accent);
+      color: #fff;
+      border: none;
+      border-radius: 10px;
+      padding: 11px 28px;
+      font-family: 'DM Sans', sans-serif;
+      font-size: 14px;
+      font-weight: 500;
+      cursor: pointer;
+      transition: background 0.2s, transform 0.1s;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .run-btn:hover { background: var(--accent-hover); }
+    .run-btn:active { transform: scale(0.98); }
+    .run-btn:disabled { opacity: 0.5; cursor: not-allowed; transform: none; }
+
+    /* LOADER */
+    .loader-bar {
+      height: 2px;
+      background: var(--border);
+      border-radius: 2px;
+      overflow: hidden;
+      margin-bottom: 12px;
+      display: none;
+    }
+    .loader-fill {
+      height: 100%;
+      background: var(--accent);
+      border-radius: 2px;
+      width: 0;
+      transition: width 0.5s ease;
+    }
+
+    /* RESULT */
+    .result-card {
+      display: none;
+    }
+    .result-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 12px;
+      flex-wrap: wrap;
+      gap: 8px;
+    }
+    .stats { display: flex; gap: 14px; flex-wrap: wrap; }
+    .stat { font-size: 12px; color: var(--ink3); }
+    .stat strong { color: var(--accent); font-weight: 500; }
+
+    .result-text {
+      font-size: 15px;
+      line-height: 1.78;
+      color: var(--ink);
+      white-space: pre-wrap;
+      word-wrap: break-word;
+    }
+
+    .result-actions {
+      display: flex;
+      gap: 8px;
+      margin-top: 14px;
+      flex-wrap: wrap;
+      align-items: center;
+    }
+    .action-btn {
+      font-size: 12.5px;
+      padding: 7px 15px;
+      border-radius: 8px;
+      border: 0.5px solid var(--border);
+      background: transparent;
+      cursor: pointer;
+      color: var(--ink2);
+      font-family: 'DM Sans', sans-serif;
+      display: flex;
+      align-items: center;
+      gap: 5px;
+      transition: all 0.15s;
+    }
+    .action-btn:hover { background: var(--tag-bg); color: var(--accent); border-color: var(--accent-hover); }
+    .copy-ok { font-size: 12px; color: var(--accent); opacity: 0; transition: opacity 0.3s; margin-left: 4px; }
+
+    /* SPINNER */
+    .spinner {
+      width: 16px; height: 16px;
+      border: 2px solid rgba(255,255,255,0.3);
+      border-top-color: #fff;
+      border-radius: 50%;
+      animation: spin 0.7s linear infinite;
+      display: none;
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    /* ERROR */
+    .error-box {
+      background: #fff5f5;
+      border: 0.5px solid #fca5a5;
+      color: #b91c1c;
+      border-radius: 10px;
+      padding: 12px 16px;
+      font-size: 13.5px;
+      display: none;
+      margin-bottom: 1rem;
+    }
+
+    /* FOOTER */
+    footer {
+      text-align: center;
+      padding: 2.5rem 1rem;
+      font-size: 12px;
+      color: var(--ink3);
+      border-top: 0.5px solid var(--border);
+      margin-top: 2rem;
+    }
+
+    @media (max-width: 540px) {
+      nav { padding: 0 1rem; }
+      .nav-badges { display: none; }
+      .bottom-bar { flex-direction: column; align-items: stretch; }
+      .run-btn { justify-content: center; }
+    }
+  </style>
+</head>
+<body>
+
+<nav>
+  <a href="/" class="nav-logo">texto<span>humano</span></a>
+  <div class="nav-badges">
+    <span class="nav-badge">GPTZero ✓</span>
+    <span class="nav-badge">Turnitin ✓</span>
+    <span class="nav-badge">Winston AI ✓</span>
+  </div>
+</nav>
+
+<div class="hero">
+  <h1>Convierte texto de IA en<br/><em>escritura humana auténtica</em></h1>
+  <p>Humaniza cualquier texto generado por ChatGPT, Claude o Gemini. Indetectable por los principales detectores.</p>
+  <div class="hero-tags">
+    <span class="hero-tag">🔒 100% privado</span>
+    <span class="hero-tag">⚡ Resultado en segundos</span>
+    <span class="hero-tag">🌍 Español e inglés</span>
+    <span class="hero-tag">✨ Powered by Claude AI</span>
+  </div>
+</div>
+
+<div class="main">
+
+  <div class="card">
+    <div class="section-label">Texto a humanizar</div>
+    <textarea id="inputText" placeholder="Pega aquí tu texto generado por IA... (mínimo 20 palabras recomendado)"></textarea>
+    <div class="divider"></div>
+
+    <div class="section-label">Tono de escritura</div>
+    <div class="opts" id="toneOpts">
+      <button class="opt active" data-val="conversacional">💬 Conversacional</button>
+      <button class="opt" data-val="academico">📚 Académico</button>
+      <button class="opt" data-val="profesional">💼 Profesional</button>
+      <button class="opt" data-val="creativo">✨ Creativo</button>
+      <button class="opt" data-val="informal">😎 Informal</button>
+    </div>
+
+    <div class="section-label">Nivel de humanización</div>
+    <div class="opts" id="levelOpts">
+      <button class="opt" data-val="suave">🌿 Suave</button>
+      <button class="opt active" data-val="moderado">⚖️ Moderado</button>
+      <button class="opt" data-val="intenso">🔥 Intenso</button>
+    </div>
+
+    <div class="divider"></div>
+    <div class="bottom-bar">
+      <span class="char-count" id="charCount">0 caracteres · 0 palabras</span>
+      <button class="run-btn" id="runBtn" onclick="humanize()">
+        <span id="btnText">Humanizar texto</span>
+        <div class="spinner" id="spinner"></div>
+      </button>
+    </div>
+  </div>
+
+  <div class="loader-bar" id="loaderBar">
+    <div class="loader-fill" id="loaderFill"></div>
+  </div>
+
+  <div class="error-box" id="errorBox"></div>
+
+  <div class="card result-card" id="resultCard">
+    <div class="result-header">
+      <div class="section-label" style="margin-bottom:0">Resultado humanizado</div>
+      <div class="stats" id="statsRow"></div>
+    </div>
+    <div class="result-text" id="resultText"></div>
+    <div class="divider"></div>
+    <div class="result-actions">
+      <button class="action-btn" onclick="copyResult()">📋 Copiar texto</button>
+      <button class="action-btn" onclick="humanize()">🔄 Regenerar</button>
+      <button class="action-btn" onclick="useAsInput()">➡️ Usar como entrada</button>
+      <span class="copy-ok" id="copyOk">¡Copiado!</span>
+    </div>
+  </div>
+
+</div>
+
+<footer>
+  TextoHumano &nbsp;·&nbsp; Humanizador de texto IA &nbsp;·&nbsp; 2025
+</footer>
+
+<script>
+  const inputEl = document.getElementById('inputText');
+  const charCountEl = document.getElementById('charCount');
+
+  inputEl.addEventListener('input', () => {
+    const t = inputEl.value;
+    const words = t.trim() ? t.trim().split(/\s+/).length : 0;
+    charCountEl.textContent = `${t.length} caracteres · ${words} palabras`;
+  });
+
+  function setupOpts(groupId) {
+    document.querySelectorAll(`#${groupId} .opt`).forEach(b => {
+      b.addEventListener('click', () => {
+        document.querySelectorAll(`#${groupId} .opt`).forEach(x => x.classList.remove('active'));
+        b.classList.add('active');
+      });
+    });
+  }
+  setupOpts('toneOpts');
+  setupOpts('levelOpts');
+
+  function getActive(groupId) {
+    return document.querySelector(`#${groupId} .opt.active`)?.dataset.val || '';
+  }
+
+  function showError(msg) {
+    const el = document.getElementById('errorBox');
+    el.textContent = '⚠️ ' + msg;
+    el.style.display = 'block';
+  }
+  function hideError() {
+    document.getElementById('errorBox').style.display = 'none';
+  }
+
+  async function humanize() {
+    const text = inputEl.value.trim();
+    if (!text) { inputEl.focus(); return; }
+
+    hideError();
+    const tone = getActive('toneOpts');
+    const level = getActive('levelOpts');
+
+    const btn = document.getElementById('runBtn');
+    const spinner = document.getElementById('spinner');
+    const btnText = document.getElementById('btnText');
+    const loaderBar = document.getElementById('loaderBar');
+    const loaderFill = document.getElementById('loaderFill');
+    const resultCard = document.getElementById('resultCard');
+
+    btn.disabled = true;
+    spinner.style.display = 'block';
+    btnText.textContent = 'Humanizando...';
+    loaderBar.style.display = 'block';
+    resultCard.style.display = 'none';
+    loaderFill.style.width = '15%';
+
+    let progress = 15;
+    const iv = setInterval(() => {
+      progress = Math.min(progress + Math.random() * 12, 88);
+      loaderFill.style.width = progress + '%';
+    }, 700);
+
+    try {
+      const resp = await fetch('/api/humanize', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ text, tone, level })
+      });
+
+      clearInterval(iv);
+      loaderFill.style.width = '100%';
+
+      const data = await resp.json();
+
+      if (!resp.ok || data.error) {
+        showError(data.error || 'Error del servidor. Intenta de nuevo.');
+      } else {
+        const result = data.result;
+        const origW = text.trim().split(/\s+/).length;
+        const resW = result.trim().split(/\s+/).length;
+        document.getElementById('statsRow').innerHTML =
+          `<span class="stat">Original: <strong>${origW} palabras</strong></span>
+           <span class="stat">Resultado: <strong>${resW} palabras</strong></span>`;
+        document.getElementById('resultText').textContent = result;
+        resultCard.style.display = 'block';
+        setTimeout(() => resultCard.scrollIntoView({ behavior: 'smooth', block: 'start' }), 100);
+      }
+    } catch (e) {
+      clearInterval(iv);
+      showError('No se pudo conectar con el servidor. ¿Está desplegado en Vercel?');
+    }
+
+    setTimeout(() => { loaderBar.style.display = 'none'; loaderFill.style.width = '0'; }, 500);
+    btn.disabled = false;
+    spinner.style.display = 'none';
+    btnText.textContent = 'Humanizar texto';
+  }
+
+  async function copyResult() {
+    const text = document.getElementById('resultText').textContent;
+    try { await navigator.clipboard.writeText(text); }
+    catch { const t = document.createElement('textarea'); t.value = text; document.body.appendChild(t); t.select(); document.execCommand('copy'); document.body.removeChild(t); }
+    const el = document.getElementById('copyOk');
+    el.style.opacity = '1';
+    setTimeout(() => el.style.opacity = '0', 2000);
+  }
+
+  function useAsInput() {
+    const result = document.getElementById('resultText').textContent;
+    inputEl.value = result;
+    inputEl.dispatchEvent(new Event('input'));
+    document.getElementById('resultCard').style.display = 'none';
+    inputEl.focus();
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  }
+</script>
+</body>
+</html>
