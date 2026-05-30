@@ -42,16 +42,16 @@ TEXTO A HUMANIZAR:
 ${text}`;
 
   try {
-    const response = await fetch('https://api.anthropic.com/v1/messages', {
+    const response = await fetch('https://openrouter.ai/api/v1/chat/completions', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
-        'x-api-key': process.env.ANTHROPIC_API_KEY,
-        'anthropic-version': '2023-06-01'
+        'Authorization': `Bearer ${process.env.OPENROUTER_API_KEY}`,
+        'HTTP-Referer': 'https://humanizador-u14h.vercel.app',
+        'X-Title': 'Humanizador de Texto'
       },
       body: JSON.stringify({
-        model: 'claude-sonnet-4-20250514',
-        max_tokens: 2048,
+        model: 'meta-llama/llama-3.1-8b-instruct:free',
         messages: [{ role: 'user', content: prompt }]
       })
     });
@@ -62,7 +62,7 @@ ${text}`;
       return res.status(500).json({ error: data.error?.message || 'API error' });
     }
 
-    const result = data.content?.map(i => i.text || '').join('').trim();
+    const result = data.choices?.[0]?.message?.content?.trim();
     return res.status(200).json({ result });
 
   } catch (err) {
